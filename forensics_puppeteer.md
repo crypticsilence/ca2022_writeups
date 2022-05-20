@@ -1,6 +1,9 @@
 Ended up using a utility called evtxexport to read these files and dump the output quickly and parse for clues.
 
-`apt install libevtx-utils -y`
+```
+apt install libevtx-utils -y
+```
+
 
 Ran evtxexport --help to get a list of the commands:
 
