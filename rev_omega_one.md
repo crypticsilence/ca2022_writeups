@@ -1,5 +1,9 @@
 # rev_omega_one
 
+## Challenge info
+
+You've been sent to the library planet Omega-One. Here, records from all over the galaxy are collected, sorted and archived with perfect efficiency. You need to retrieve records about Draeger's childhood, but the interface is impossibly large. Can you unravel the storage system?
+
 I'll admit, I am not amazing at reverse engineering, but got lucky working hard poking through the file.  I noticed a data structure and guessed what it was doing for this one.
 
 Loaded the binary up in Ghidra to sort through what it was doing, noticed this interesting part:

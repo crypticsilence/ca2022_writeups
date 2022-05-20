@@ -1,9 +1,16 @@
+# Puppeteer
+
+## Challenge info
+
+Planet Longhir is known for it's top-tier researchers. Due to their dedication in science and engineering, their military equipment is the most advanced one in the galaxy. In fact, the prototype DES-3000, a self-propelled precision-strike missile that is capable of reaching targets even in Ratnik galaxy, is being used to disable Galactic Federation's communication satellites. The mystery that Miyuki is trying to solve is, how the satellite's location was leaked since it is a top-sercret that only Galactic Federation's council is aware of. Help her analyse the Council's HQ event logs and solve this mystery.
+
+This chall existed as a ton of EVTX files to hunt through for clues on how info was leaked.
+
 Ended up using a utility called evtxexport to read these files and dump the output quickly and parse for clues.
 
 ```
 apt install libevtx-utils -y
 ```
-
 
 Ran evtxexport --help to get a list of the commands:
 
@@ -55,7 +62,7 @@ Ended up dumping all event logs to disk into parsable txt files quickly with gre
 ls *.evtx | while read ln ; do echo  -------- $ln --------------------------- ; evtxexport $ln >$ln.txt ; done
 ```
 
-Did a bit of grep looking for a few things, with grep -A30 -B45 to output lots of code Before and After, basically around my search items.  Needed to look more closely though as I am seeing a lot.
+Did a bit of grep looking for a few things, with `cat *.txt | grep $searchterm -A30 -B45` to output lots of code Before and After, basically around my search items.  Needed to look more closely though as I am seeing a lot.
 
 
 Started going thru them manually w/ less until I found some interesting stuff in the Powershell logs.
@@ -109,6 +116,8 @@ Microsoft-Windows-PowerShell%4Operational.evtx.txt-$tNZvQCljVk::CreateThread(0,0
 Had to figure out how to decode. Not too hard honestly.. Finally got it, commented out the baddies and outputted some things, had to play with the format a little but I use powershell a lot so this wasn't bad for me.
 
 ```
+[..]
+
 #[System.Runtime.InteropServices.Marshal]::Copy($HVOASfFuNSxRXR,0,$hRffYLENA,$HVOASfFuNSxRXR.Length);
 
 
